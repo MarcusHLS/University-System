@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from controller.student_controller import StudentController
 from controller.subject_controller import SubjectController
+from model.database import Database
+import re
 
 class GUIUniApp:
     def __init__(self, master):
@@ -12,6 +14,7 @@ class GUIUniApp:
         self.student_controller = StudentController()
         self.subject_controller = SubjectController(self.student_controller.students)
         
+        self.students = Database.load_students()
         self.logged_in_student = None
         
         self.build_login_ui()
@@ -38,6 +41,7 @@ class GUIUniApp:
         password = self.password_entry.get().strip()
         
         student, message = self.student_controller.login(email, password)
+        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
         messagebox.showinfo("Login", message)
         
         if student:
@@ -65,7 +69,9 @@ class GUIUniApp:
             email = email_entry.get().strip()
             password = password_entry.get().strip()
             _, message = self.student_controller.register(name, email, password)
+            message = re.sub(r'\x1b\[[0-9;]*m', '', message)
             messagebox.showinfo("Register", message)
+            Database.save_students(self.students)
             reg_window.destroy()
 
         tk.Button(reg_window, text="Register", command=do_register).pack(pady=5)
@@ -82,10 +88,12 @@ class GUIUniApp:
 
     def enrol_subject(self):
         message = self.subject_controller.enrol_subject(self.logged_in_student)
+        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
         messagebox.showinfo("Enrol Subject", message)
 
     def show_subjects(self):
         message = self.subject_controller.get_subjects(self.logged_in_student)
+        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
         messagebox.showinfo("Subjects", message)
 
     def logout(self):
