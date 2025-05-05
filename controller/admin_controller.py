@@ -15,6 +15,7 @@ class AdminController:
             return "\033[33mOperation cancelled.\033[0m"
 
     def show_all_students(self):
+        self.students = Database.load_students()
         if not self.students:
             return "\033[33m< Nothing to Display >\033[0m"
         result = ["\033[33mStudent List:\033[0m"]
@@ -23,6 +24,7 @@ class AdminController:
         return "\n".join(result)
 
     def group_students_by_grade(self):
+        self.students = Database.load_students()
         if not self.students:
             return "\033[33mNo students to group.\033[0m"
 
@@ -42,6 +44,7 @@ class AdminController:
         return "\n".join(output)
 
     def partition_students(self):
+        self.students = Database.load_students()
         if not self.students:
             return "\033[33mNo students to partition.\033[0m"
 
@@ -61,6 +64,7 @@ class AdminController:
         return "\n".join(output)
 
     def remove_student_by_id(self, student_id):
+        self.students = Database.load_students()
         student_to_remove = None
         for student in self.students:
             if student.id == student_id:
