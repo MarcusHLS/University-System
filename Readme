@@ -107,4 +107,4 @@ Developed by Group 4
 ✅ Supports running both CLI and GUI concurrently (multithreaded)
 ✅ CLI color output works on **Linux / macOS / Windows Terminal / VSCode Terminal**
 
-⚠️ If colors do not display properly in Windows Command Prompt, try using **Windows Terminal / PowerShell / VSCode Terminal**.
+⚠️ If colors do not display properly in Windows Command Prompt, try using **Windows Terminal / PowerShell / VSCode Terminal**
