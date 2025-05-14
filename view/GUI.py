@@ -8,6 +8,7 @@ import re
 class GUIUniApp:
     def __init__(self, master):
         self.master = master
+        
         self.master.title("University System")
         self.master.geometry("400x300")
         
@@ -41,7 +42,7 @@ class GUIUniApp:
         password = self.password_entry.get().strip()
         
         student, message = self.student_controller.login(email, password)
-        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
+        message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
         messagebox.showinfo("Login", message)
         
         if student:
@@ -69,7 +70,7 @@ class GUIUniApp:
             email = email_entry.get().strip()
             password = password_entry.get().strip()
             _, message = self.student_controller.register(name, email, password)
-            message = re.sub(r'\x1b\[[0-9;]*m', '', message)
+            message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
             messagebox.showinfo("Register", message)
             Database.save_students(self.students)
             reg_window.destroy()
@@ -88,12 +89,12 @@ class GUIUniApp:
 
     def enrol_subject(self):
         message = self.subject_controller.enrol_subject(self.logged_in_student)
-        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
+        message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
         messagebox.showinfo("Enrol Subject", message)
 
     def show_subjects(self):
         message = self.subject_controller.get_subjects(self.logged_in_student)
-        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
+        message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
         messagebox.showinfo("Subjects", message)
 
     def logout(self):
