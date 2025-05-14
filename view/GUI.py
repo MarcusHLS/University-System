@@ -72,7 +72,7 @@ class GUIUniApp:
             _, message = self.student_controller.register(name, email, password)
             message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
             messagebox.showinfo("Register", message)
-            Database.save_students(self.students)
+            self.students = Database.load_students()
             reg_window.destroy()
 
         tk.Button(reg_window, text="Register", command=do_register).pack(pady=5)
@@ -85,6 +85,8 @@ class GUIUniApp:
 
         tk.Button(self.master, text="Enrol Subject", command=self.enrol_subject).pack(pady=5)
         tk.Button(self.master, text="Show Subjects", command=self.show_subjects).pack(pady=5)
+        tk.Button(self.master, text="Remove Subjects", command=self.remove_subjects).pack(pady=5)
+        tk.Button(self.master, text="Change Password", command=self.change_password).pack(pady=5)
         tk.Button(self.master, text="Logout", command=self.logout).pack(pady=5)
 
     def enrol_subject(self):
@@ -97,7 +99,56 @@ class GUIUniApp:
         message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
         messagebox.showinfo("Subjects", message)
 
+    def remove_subjects(self):
+        rev_window = tk.Toplevel(self.master)
+        rev_window.title("Register")
+        
+        tk.Label(rev_window, text="Enter Subject's ID:").pack()
+        id_entry = tk.Entry(rev_window)
+        id_entry.pack()
+        
+        def do_remove():
+            id = id_entry.get().strip()
+            
+            message = self.subject_controller.remove_subject(self.logged_in_student, id)
+            message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
+            messagebox.showinfo("Remove Subject by ID", message)
+            self.sync_logged_in_student()
+            rev_window.destroy()
+
+        tk.Button(rev_window, text="Remove", command=do_remove).pack(pady=5)
+
+    def change_password(self):
+        change_password_window = tk.Toplevel(self.master)
+        change_password_window.title("Change Password")
+        
+        tk.Label(change_password_window, text="Enter new password:").pack()
+        new_password_entry = tk.Entry(change_password_window)
+        new_password_entry.pack()
+
+        tk.Label(change_password_window, text="Enter confirm password:").pack()
+        confirm_password_entry = tk.Entry(change_password_window)
+        confirm_password_entry.pack()
+        
+        def do_change():
+            new_password = new_password_entry.get().strip()
+            confirm_password = confirm_password_entry.get().strip()
+            message = self.student_controller.change_password(self.logged_in_student, new_password, confirm_password)
+            message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
+            messagebox.showinfo("Change Account Password", message)
+            self.sync_logged_in_student()
+            change_password_window.destroy()
+
+        tk.Button(change_password_window, text="Change Password", command=do_change).pack(pady=5)
+
     def logout(self):
         self.student_controller.save_students()
         self.logged_in_student = None
         self.build_login_ui()
+
+    def sync_logged_in_student(self):
+        self.students = Database.load_students()
+        for student in self.students:
+            if student.email == self.logged_in_student.email:
+                self.logged_in_student = student
+                break
