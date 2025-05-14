@@ -1,14 +1,14 @@
 # University Management System
 
-A **MVC-based** university student management system supporting both **Command Line Interface (CLI)** and **Graphical User Interface (GUI)**. It provides features for student registration, login, course enrollment, course removal, subject viewing, and administrator operations.
+A **MVC-based** university student management system supporting both **Command Line Interface (CLI)** and **Graphical User Interface (GUI)**. It provides features for student login, course enrollment, course removal, subject viewing, and administrator operations.
 
 ---
 
 ## ✨ Features
 
-✅ Student registration and login  
+✅ Student login using validated credentials  
 ✅ Maximum of 4 enrolled subjects per student  
-✅ Automatic generation of subject marks and grades (HD/D/C/P/Z)  
+✅ Automatic generation of subject marks and grades (HD/D/C/P/F)  
 ✅ Students can view or remove enrolled subjects  
 ✅ Administrator functions:
 - Clear the student database
@@ -17,7 +17,7 @@ A **MVC-based** university student management system supporting both **Command L
 - Remove student by ID
 - Display all students
 
-✅ **Colored CLI output (ANSI color codes)** 
+✅ **Consistent CLI formatting with indentations and colored output (via `colorama`)**  
 ✅ **GUI interface (built with Tkinter)**
 
 ---
@@ -50,9 +50,9 @@ A **MVC-based** university student management system supporting both **Command L
 python app.py
 ```
 
-When prompted, enter `C` (CLI) to launch the command-line version.
+When prompted, enter `1` to launch the command-line version.
 
-👉 CLI uses **ANSI color codes**; recommended to run in a terminal or command prompt supporting colors.
+👉 CLI uses **clear indentation and colored output using `colorama`** for improved readability.
 
 ------
 
@@ -62,7 +62,7 @@ When prompted, enter `C` (CLI) to launch the command-line version.
 python app.py
 ```
 
-When prompted, enter `G` (GUI) to launch the graphical interface.
+When prompted, enter `2` to launch the graphical interface.
 
 Alternatively, run directly:
 
@@ -74,8 +74,15 @@ python views/gui_view.py
 
 ## ⚙️ Requirements
 
-✅ Python 3.7+
-✅ Tkinter (included in Python standard library)
+✅ Python 3.7+  
+✅ Tkinter (included in Python standard library)  
+✅ `colorama` for CLI color support
+
+Install dependencies (if needed):
+
+```bash
+pip install colorama
+```
 
 For Linux, if Tkinter is missing:
 
@@ -89,8 +96,8 @@ sudo apt-get install python3-tk
 
 ## 📚 Data Storage
 
-Student data is saved in `students.data` (pickle format).
- Deleting or clearing this file will result in loss of stored data.
+Student data is saved in `students.data` (pickle format).  
+Deleting or clearing this file will result in loss of stored data.
 
 The admin's "clear database" option will also reset this file.
 
@@ -104,7 +111,8 @@ Developed by Group 4
 
 ## 🧩 Notes
 
-✅ Supports running both CLI and GUI concurrently (multithreaded)
-✅ CLI color output works on **Linux / macOS / Windows Terminal / VSCode Terminal**
+✅ Supports both CLI and GUI modes for different user types  
+✅ CLI formatting consistent with specification (indentation, wording, layout)  
+✅ CLI uses `colorama` for colored terminal output (compatible with most modern terminals)
 
-⚠️ If colors do not display properly in Windows Command Prompt, try using **Windows Terminal / PowerShell / VSCode Terminal**
+⚠️ GUI is accessible only for pre-registered students. Registration must be completed via CLI.
