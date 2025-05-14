@@ -1,31 +1,23 @@
-import threading
-import tkinter as tk
-from controller.student_controller import StudentController
-from controller.admin_controller import AdminController
-from controller.subject_controller import SubjectController
-from view.CLI import CLIView
-from view.GUI import GUIUniApp  
+# App.py
+from view.CLI import main_menu
+from view.GUI import GUIUniApp
 
-def run_cli():
-    student_controller = StudentController()
-    admin_controller = AdminController()
-    subject_controller = SubjectController(student_controller.students)
+def start_cli():
+    main_menu()
 
-    cli_view = CLIView(student_controller, admin_controller, subject_controller)
-    cli_view.main_menu()
-
-def run_gui():
-    root = tk.Tk()
-    gui_app = GUIUniApp(root)  
-    root.mainloop()
+def start_gui():
+    app = GUIUniApp()
+    app.run()
 
 if __name__ == "__main__":
-    mode = input("Choose interface: (C)LI or (G)UI? ").upper()
+    print("Start Application Mode:")
+    print("1. Command Line Interface (CLI)")
+    print("2. Graphical User Interface (GUI)")
+    choice = input("Enter 1 or 2: ").strip()
 
-    if mode == "C":
-        run_cli()
-    elif mode == "G":
-        run_gui()
+    if choice == "1":
+        start_cli()
+    elif choice == "2":
+        start_gui()
     else:
-        print("Invalid choice. Defaulting to CLI.")
-        run_cli()
+        print("Invalid choice. Exiting.")

@@ -2,101 +2,88 @@ import tkinter as tk
 from tkinter import messagebox
 from controller.student_controller import StudentController
 from controller.subject_controller import SubjectController
-from model.database import Database
-import re
 
 class GUIUniApp:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("University System")
-        self.master.geometry("400x300")
-        
-        self.student_controller = StudentController()
-        self.subject_controller = SubjectController(self.student_controller.students)
-        
-        self.students = Database.load_students()
-        self.logged_in_student = None
-        
-        self.build_login_ui()
+    def __init__(self):
+        self.controller = StudentController()
+        self.subject_controller = SubjectController()
+        self.student = None
+        self.root = tk.Tk()
+        self.root.title("GUIUniApp - Login")
+        self.login_window()
 
-    def build_login_ui(self):
-        for widget in self.master.winfo_children():
-            widget.destroy()
+    def login_window(self):
+        self.clear_window()
 
-        tk.Label(self.master, text="Student Login").pack(pady=10)
-        
-        tk.Label(self.master, text="Email:").pack()
-        self.email_entry = tk.Entry(self.master)
-        self.email_entry.pack()
+        tk.Label(self.root, text="Email:").grid(row=0, column=0, padx=10, pady=5)
+        self.email_entry = tk.Entry(self.root)
+        self.email_entry.grid(row=0, column=1, padx=10, pady=5)
 
-        tk.Label(self.master, text="Password:").pack()
-        self.password_entry = tk.Entry(self.master, show="*")
-        self.password_entry.pack()
+        tk.Label(self.root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
+        self.password_entry = tk.Entry(self.root, show="*")
+        self.password_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        tk.Button(self.master, text="Login", command=self.login).pack(pady=5)
-        tk.Button(self.master, text="Register", command=self.register).pack(pady=5)
+        login_btn = tk.Button(self.root, text="Login", command=self.login)
+        login_btn.grid(row=2, column=0, columnspan=2, pady=10)
 
     def login(self):
-        email = self.email_entry.get().strip()
-        password = self.password_entry.get().strip()
-        
-        student, message = self.student_controller.login(email, password)
-        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
-        messagebox.showinfo("Login", message)
-        
+        email = self.email_entry.get()
+        password = self.password_entry.get()
+
+        if not email or not password:
+            messagebox.showerror("Error", "Email and Password cannot be empty.")
+            return
+
+        if not self.controller.validate_credentials(email, password):
+            messagebox.showerror("Error", "Invalid email or password format.")
+            return
+
+        student = self.controller.login(email, password)
         if student:
-            self.logged_in_student = student
-            self.build_student_menu()
+            self.student = student
+            self.enrolment_window()
+        else:
+            messagebox.showerror("Login Failed", "Incorrect email or password.")
 
-    def register(self):
-        reg_window = tk.Toplevel(self.master)
-        reg_window.title("Register")
-        
-        tk.Label(reg_window, text="Name:").pack()
-        name_entry = tk.Entry(reg_window)
-        name_entry.pack()
-        
-        tk.Label(reg_window, text="Email:").pack()
-        email_entry = tk.Entry(reg_window)
-        email_entry.pack()
-        
-        tk.Label(reg_window, text="Password:").pack()
-        password_entry = tk.Entry(reg_window, show="*")
-        password_entry.pack()
-        
-        def do_register():
-            name = name_entry.get().strip()
-            email = email_entry.get().strip()
-            password = password_entry.get().strip()
-            _, message = self.student_controller.register(name, email, password)
-            message = re.sub(r'\x1b\[[0-9;]*m', '', message)
-            messagebox.showinfo("Register", message)
-            Database.save_students(self.students)
-            reg_window.destroy()
+    def enrolment_window(self):
+        self.clear_window()
+        self.root.title("Enrolment Window")
 
-        tk.Button(reg_window, text="Register", command=do_register).pack(pady=5)
+        tk.Label(self.root, text=f"Welcome {self.student.name}", font=("Arial", 14)).grid(row=0, column=0, columnspan=2, pady=10)
 
-    def build_student_menu(self):
-        for widget in self.master.winfo_children():
-            widget.destroy()
+        self.subject_listbox = tk.Listbox(self.root, width=50)
+        self.subject_listbox.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+        self.refresh_subject_list()
 
-        tk.Label(self.master, text=f"Welcome {self.logged_in_student.name}").pack(pady=10)
-
-        tk.Button(self.master, text="Enrol Subject", command=self.enrol_subject).pack(pady=5)
-        tk.Button(self.master, text="Show Subjects", command=self.show_subjects).pack(pady=5)
-        tk.Button(self.master, text="Logout", command=self.logout).pack(pady=5)
+        tk.Button(self.root, text="Enrol in New Subject", command=self.enrol_subject).grid(row=2, column=0, pady=10)
+        tk.Button(self.root, text="Logout", command=self.logout).grid(row=2, column=1, pady=10)
 
     def enrol_subject(self):
-        message = self.subject_controller.enrol_subject(self.logged_in_student)
-        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
-        messagebox.showinfo("Enrol Subject", message)
+        if len(self.student.subjects) >= 4:
+            messagebox.showwarning("Limit Reached", "You can only enrol in up to 4 subjects.")
+            return
 
-    def show_subjects(self):
-        message = self.subject_controller.get_subjects(self.logged_in_student)
-        message = re.sub(r'\x1b\[[0-9;]*m', '', message)
-        messagebox.showinfo("Subjects", message)
+        subject = self.subject_controller.enrol_subject(self.student)
+        messagebox.showinfo("Enrolled", f"Subject {subject.id} enrolled with mark {subject.mark} and grade {subject.grade}")
+        self.refresh_subject_list()
+
+    def refresh_subject_list(self):
+        self.subject_listbox.delete(0, tk.END)
+        for subj in self.student.subjects:
+            self.subject_listbox.insert(tk.END, f"Subject {subj.id} | Mark: {subj.mark} | Grade: {subj.grade}")
 
     def logout(self):
-        self.student_controller.save_students()
-        self.logged_in_student = None
-        self.build_login_ui()
+        self.student = None
+        self.login_window()
+
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def run(self):
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    app = GUIUniApp()
+    app.run()
+
