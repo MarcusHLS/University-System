@@ -32,6 +32,10 @@ def admin_menu():
             if confirm == "Y":
                 admin.clear_database()
                 print(Fore.YELLOW + FIRST_INDENTATION + "Students data cleared" + Style.RESET_ALL)
+            elif confirm == "N":
+                continue
+            else:
+                print(Fore.RED + FIRST_INDENTATION + "Invalid command. Please try again!" + Style.RESET_ALL)
 
         elif choice == "g":
             print(Fore.YELLOW + FIRST_INDENTATION + "Grade Grouping" + Style.RESET_ALL)
@@ -46,7 +50,7 @@ def admin_menu():
                             print("[]")
                         else:
                             print(" [" + ', '.join(
-                                f"{s.name} :: {s.id} --> GRADE:  {grade} - MARK: {s.calculate_average():.2f}" for s in students
+                                f"{s.name:<15} :: {s.id} --> GRADE:  {grade:<3} -- MARK: {s.calculate_average():.2f}" for s in students
                             ) + "]")
         elif choice == "p":
             print(Fore.YELLOW + FIRST_INDENTATION + "PASS/FAIL Partition" + Style.RESET_ALL)
@@ -56,7 +60,7 @@ def admin_menu():
                     print(FIRST_INDENTATION+f"{status} --> []")
                 else:
                     details = ', '.join(
-                        f"{s.name} :: {s.id} --> GRADE:  {s.get_grade_group()} - MARK: {s.calculate_average():.2f}"
+                        f"{s.name} :: {s.id} --> GRADE:  {s.get_grade_group():<2} -- MARK: {s.calculate_average():.2f}"
                         for s in students
                     )
                     print(FIRST_INDENTATION+f"{status} --> [{details}]")
@@ -80,7 +84,7 @@ def admin_menu():
                 print(SEC_INDENTATION + "< Nothing to Display >" + Style.RESET_ALL)
             else:
                 for s in students:
-                    print(FIRST_INDENTATION + f"{s.name} :: {s.id} --> Email: {s.email}")
+                    print(FIRST_INDENTATION + f"{s.name:<15} :: {s.id} --> Email: {s.email}")
 
         elif choice == "x":
             break
@@ -103,10 +107,10 @@ def student_menu():
                     continue
                 break
 
-            print(Fore.YELLOW + FIRST_INDENTATION + "email and password formats acceptable" + Style.RESET_ALL)
-            studnet_exist = controller.email_exists(email)
-            if studnet_exist != False:
-                print(Fore.RED + FIRST_INDENTATION + f"Student {studnet_exist} already exists." + Style.RESET_ALL)
+            print(Fore.YELLOW + FIRST_INDENTATION + "Email and password formats acceptable" + Style.RESET_ALL)
+            student_exist = controller.email_exists(email)
+            if student_exist != False:
+                print(Fore.RED + FIRST_INDENTATION + f"Student {student_exist} already exists." + Style.RESET_ALL)
                 continue
             name = input(FIRST_INDENTATION + "Name: ")
             if controller.student_exists(name):
@@ -128,7 +132,7 @@ def student_menu():
                     continue
                 break
 
-            print(Fore.YELLOW + FIRST_INDENTATION + "email and password formats acceptable" + Style.RESET_ALL)
+            print(Fore.YELLOW + FIRST_INDENTATION + "Email and password formats acceptable" + Style.RESET_ALL)
             student = controller.login(email, password)
             if student:
                 subject_menu(student, controller)
@@ -139,6 +143,7 @@ def student_menu():
 
 def subject_menu(student, controller):
     subject_ctrl = SubjectController()
+    print(f"{Fore.CYAN + SEC_INDENTATION}Welcome come back, {student.name}! {Style.RESET_ALL}")
     while True:
         print(Fore.CYAN + SEC_INDENTATION + "Student Course Menu (c/e/r/s/x): " + Style.RESET_ALL, end="")
         choice = input().strip().lower()
@@ -149,6 +154,7 @@ def subject_menu(student, controller):
             result = controller.change_password(student, new_pw, confirm_pw)
             if result == "mismatch":
                 print(Fore.RED + SEC_INDENTATION + "Password does not match – try again" + Style.RESET_ALL)
+            print(Fore.GREEN + SEC_INDENTATION + "Your password has been changed successfully!")
 
         elif choice == "e":
             if len(student.subjects) < 4:
@@ -159,7 +165,7 @@ def subject_menu(student, controller):
                 print(Fore.RED + SEC_INDENTATION + "Students are allowed to enrol in 4 subjects only" + Style.RESET_ALL)
 
         elif choice == "r":
-            sid = int(input(SEC_INDENTATION + "Remove Subject by ID: "))
+            sid = int(input(Fore.YELLOW + SEC_INDENTATION + "Remove Subject by ID: "))
             success = subject_ctrl.remove_subject(student, sid)
             if success:
                 print(Fore.YELLOW + SEC_INDENTATION + f"Dropping Subject-{str(sid).zfill(3)}" + Style.RESET_ALL)
@@ -169,11 +175,11 @@ def subject_menu(student, controller):
                     
         elif choice == "s":
             if not student.subjects:
-                print(Fore.YELLOW + SEC_INDENTATION + "Showing 0 subjects" + Style.RESET_ALL)
+                print(Fore.YELLOW + SEC_INDENTATION + " < Nothing to display >" + Style.RESET_ALL)
             else:
                 print(Fore.YELLOW + SEC_INDENTATION + f"Showing {len(student.subjects)} subjects" + Style.RESET_ALL)
                 for subj in student.subjects:
-                    print(SEC_INDENTATION + f"[ Subject::{subj.id.zfill(3)} -- mark = {subj.mark} -- grade = {subj.grade} ]")
+                    print(SEC_INDENTATION + f"[ Subject::{subj.id.zfill(3)} -- Mark = {subj.mark:<3} -- Grade = {subj.grade:<2} ]")
 
         elif choice == "x":
             break

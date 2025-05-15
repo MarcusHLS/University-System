@@ -101,7 +101,7 @@ class GUIUniApp:
         if not subjects:
             messagebox.showinfo("Subjects", "No enrolled subjects.")
             return
-        info = "\n".join([f"ID: {s.id} | Mark: {s.mark} | Grade: {s.grade}" for s in subjects])
+        info = "\n".join([f"ID: {s.id} | Mark: {s.mark:3} | Grade: {s.grade}" for s in subjects])
         messagebox.showinfo("Subjects", info)
 
     def remove_subject(self):
