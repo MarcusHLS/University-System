@@ -31,7 +31,6 @@ class GUIUniApp:
         self.password_entry.pack()
 
         tk.Button(self.master, text="Login", command=self.login).pack(pady=5)
-        tk.Button(self.master, text="Register", command=self.register).pack(pady=5)
 
     def login(self):
         email = self.email_entry.get().strip()
@@ -44,38 +43,6 @@ class GUIUniApp:
             self.build_student_menu()
         else:
             messagebox.showerror("Login Failed", "Invalid email or password.")
-
-    def register(self):
-        reg_window = tk.Toplevel(self.master)
-        reg_window.title("Register")
-
-        tk.Label(reg_window, text="Name:").pack()
-        name_entry = tk.Entry(reg_window)
-        name_entry.pack()
-
-        tk.Label(reg_window, text="Email:").pack()
-        email_entry = tk.Entry(reg_window)
-        email_entry.pack()
-
-        tk.Label(reg_window, text="Password:").pack()
-        password_entry = tk.Entry(reg_window, show="*")
-        password_entry.pack()
-
-        def do_register():
-            name = name_entry.get().strip()
-            email = email_entry.get().strip()
-            password = password_entry.get().strip()
-
-            result = self.student_controller.register(name, email, password)
-            if result == "registered":
-                messagebox.showinfo("Success", "Registration successful.")
-                reg_window.destroy()
-            elif result == "exists":
-                messagebox.showerror("Error", "Student already exists.")
-            elif result == "invalid_format":
-                messagebox.showerror("Error", "Invalid email or password format.")
-
-        tk.Button(reg_window, text="Register", command=do_register).pack(pady=5)
 
     def build_student_menu(self):
         for widget in self.master.winfo_children():
