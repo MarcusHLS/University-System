@@ -45,7 +45,7 @@ def admin_menu():
             else:
                 for grade, students in groups.items():
                     if len(students)>0:
-                        print( f"{FIRST_INDENTATION}{grade} -->" , end="")
+                        print( f"{FIRST_INDENTATION}{grade:2} -->" , end="")
                         if not students:
                             print("[]")
                         else:
