@@ -1,90 +1,179 @@
-class CLIView:
-    def __init__(self, student_controller, admin_controller, subject_controller):
-        self.student_controller = student_controller
-        self.admin_controller = admin_controller
-        self.subject_controller = subject_controller
+from controller.student_controller import StudentController
+from controller.subject_controller import SubjectController
+from controller.admin_controller import AdminController
+from colorama import init, Fore, Style
 
-    def main_menu(self):
-        while True:
-            choice = input("\n\033[36mUniversity System: (A)dmin, (S)tudent, (X) Exit:\033[0m ").upper()
-            if choice == 'A':
-                self.admin_menu()
-            elif choice == 'S':
-                self.student_menu()
-            elif choice == 'X':
-                print("\033[33mThank you for using the system.\033[0m")
-                break
-            else:
-                print("\033[31mInvalid input. Please try again.\033[0m")
+init()  
+FIRST_INDENTATION = "   "
+SEC_INDENTATION = "      "
+Thr_INDENTATION = "         "
 
-    def admin_menu(self):
-        while True:
-            choice = input(f"\n\t\033[36mAdmin Menu: (C)lear DB, (G)roup Grades, (P)artition, (R)emove Student, (S)how All, (X) Exit:\033[0m ").upper()
-            if choice == 'C':
-                confirm = input(f"\n\t\033[33mAre you sure to clear database? (Y/N):\033[0m ").upper() == 'Y'
-                message = self.admin_controller.clear_database(confirm)
-                print(message)
-            elif choice == 'G':
-                message = self.admin_controller.group_students_by_grade()
-                print(message)
-            elif choice == 'P':
-                message = self.admin_controller.partition_students()
-                print(message)
-            elif choice == 'R':
-                student_id = input("\n\t\033[33mEnter Student ID to remove:\033[0m ")
-                message = self.admin_controller.remove_student_by_id(student_id)
-                print(message)
-            elif choice == 'S':
-                message = self.admin_controller.show_all_students()
-                print(message)
-            elif choice == 'X':
-                print("\n\t\033[33mExit Admin Menu\033[0m")
-                break
-            else:
-                print("\n\t\033[31mInvalid input.\033[0m")
+def main_menu():
+    while True:
+        print(Fore.CYAN + "University System: (A)dmin, (S)tudent, or X : " + Style.RESET_ALL, end="")
+        choice = input().strip().upper()
+        if choice == "A":
+            admin_menu()
+        elif choice == "S":
+            student_menu()
+        elif choice == "X":
+            print(Fore.YELLOW + "Thank You" + Style.RESET_ALL)
+            break
 
-    def student_menu(self):
-        while True:
-            choice = input("\n\t\033[36mStudent Menu: (L)ogin, (R)egister, (X) Exit:\033[0m ").upper()
-            if choice == 'L':
-                email = input("\n\t\033[33mEmail:\033[0m ")
-                password = input("\n\t\033[33mPassword:\033[0m ")
-                student, message = self.student_controller.login(email, password)
-                print(message)
-                if student:
-                    self.student_course_menu(student)
-            elif choice == 'R':
-                name = input("\n\t\033[33mName:\033[0m ")
-                email = input("\n\t\033[33mEmail:\033[0m ")
-                password = input("\n\t\033[33mPassword:\033[0m ")
-                student, message = self.student_controller.register(name, email, password)
-                print(message)
-            elif choice == 'X':
-                print("\n\t\033[33mExit Student Menu\033[0m")
-                break
-            else:
-                print("\n\t\033[31mInvalid input.\033[0m")
+def admin_menu():
+    admin = AdminController()
+    while True:
+        print(Fore.CYAN + FIRST_INDENTATION + "Admin System (c/g/p/r/s/x): " + Style.RESET_ALL, end="")
+        choice = input().strip().lower()
 
-    def student_course_menu(self, student):
-        while True:
-            choice = input("\n\t\t\033[36mStudent Course Menu: (E)nrol, (R)emove, (S)how Subjects, (P)assword Change, (X) Exit:\033[0m ").upper()
-            if choice == 'E':
-                message = self.subject_controller.enrol_subject(student)
-                print(message)
-            elif choice == 'R':
-                subject_id = input("\n\t\t\033[33mSubject ID to remove:\033[0m ")
-                message = self.subject_controller.remove_subject(student, subject_id)
-                print(message)
-            elif choice == 'S':
-                message = self.subject_controller.get_subjects(student)
-                print(message)
-            elif choice == 'P':
-                new_password = input("\n\t\t\033[33mNew password:\033[0m ")
-                confirm_password = input("\n\t\t\033[33mConfirm password:\033[0m ")
-                message = self.student_controller.change_password(student, new_password, confirm_password)
-                print(message)
-            elif choice == 'X':
-                print("\n\t\t\033[33mExit Student Course Menu\033[0m")
-                break
+        if choice == "c":
+            print(Fore.YELLOW + FIRST_INDENTATION + "Clearing students database" + Style.RESET_ALL)
+            confirm = input(Fore.RED + FIRST_INDENTATION + "Are you sure you want to clear the database (Y)ES/(N)O: " + Style.RESET_ALL).strip().upper()
+            if confirm == "Y":
+                admin.clear_database()
+                print(Fore.YELLOW + FIRST_INDENTATION + "Students data cleared" + Style.RESET_ALL)
+
+        elif choice == "g":
+            print(Fore.YELLOW + FIRST_INDENTATION + "Grade Grouping" + Style.RESET_ALL)
+            groups = admin.group_students()
+            if not any(groups.values()):
+                print(SEC_INDENTATION + "< Nothing to Display >" + Style.RESET_ALL)
             else:
-                print("\n\t\t\033[31mInvalid input.\033[0m")
+                for grade, students in groups.items():
+                    if len(students)>0:
+                        print( f"{FIRST_INDENTATION}{grade} -->" , end="")
+                        if not students:
+                            print("[]")
+                        else:
+                            print(" [" + ', '.join(
+                                f"{s.name} :: {s.id} --> GRADE:  {grade} - MARK: {s.calculate_average():.2f}" for s in students
+                            ) + "]")
+        elif choice == "p":
+            print(Fore.YELLOW + FIRST_INDENTATION + "PASS/FAIL Partition" + Style.RESET_ALL)
+            partition = admin.partition_students()
+            for status, students in partition.items():
+                if not students:
+                    print(FIRST_INDENTATION+f"{status} --> []")
+                else:
+                    details = ', '.join(
+                        f"{s.name} :: {s.id} --> GRADE:  {s.get_grade_group()} - MARK: {s.calculate_average():.2f}"
+                        for s in students
+                    )
+                    print(FIRST_INDENTATION+f"{status} --> [{details}]")
+
+        elif choice == "r":
+            print(Fore.CYAN + FIRST_INDENTATION + "Remove by ID: " + Style.RESET_ALL, end="")
+            try:
+                sid = str(input())
+                success = admin.remove_student(sid)
+                if success:
+                    print(Fore.YELLOW + FIRST_INDENTATION + f"Removing Student {sid} Account" + Style.RESET_ALL)
+                else:
+                    print(Fore.RED + FIRST_INDENTATION + f"Student {sid} does not exist" + Style.RESET_ALL)
+            except ValueError:
+                print(Fore.RED + FIRST_INDENTATION + "Invalid ID format" + Style.RESET_ALL)
+
+        elif choice == "s":
+            print(Fore.YELLOW + FIRST_INDENTATION + "Student List" + Style.RESET_ALL)
+            students = admin.list_students()
+            if not students:
+                print(SEC_INDENTATION + "< Nothing to Display >" + Style.RESET_ALL)
+            else:
+                for s in students:
+                    print(FIRST_INDENTATION + f"{s.name} :: {s.id} --> Email: {s.email}")
+
+        elif choice == "x":
+            break
+
+def student_menu():
+    controller = StudentController()
+    while True:
+        print(Fore.CYAN + FIRST_INDENTATION + "Student System (l/r/x): " + Style.RESET_ALL, end="")
+        choice = input().strip().lower()
+        if choice == "r":
+            print(Fore.GREEN + FIRST_INDENTATION + "Student Sign Up" + Style.RESET_ALL)
+
+            email = ""
+            while True:
+                email = input(FIRST_INDENTATION + "Email: ")
+                password = input(FIRST_INDENTATION + "Password: ")
+
+                if not controller.validate_credentials(email, password):
+                    print(Fore.RED + FIRST_INDENTATION + "Incorrect email or password format." + Style.RESET_ALL)
+                    continue
+                break
+
+            print(Fore.YELLOW + FIRST_INDENTATION + "email and password formats acceptable" + Style.RESET_ALL)
+            studnet_exist = controller.email_exists(email)
+            if studnet_exist != False:
+                print(Fore.RED + FIRST_INDENTATION + f"Student {studnet_exist} already exists." + Style.RESET_ALL)
+                continue
+            name = input(FIRST_INDENTATION + "Name: ")
+            if controller.student_exists(name):
+                print(Fore.RED + FIRST_INDENTATION + f"Student {name} already exists." + Style.RESET_ALL)
+                continue
+            controller.register(name,email,password)
+            print(Fore.YELLOW + FIRST_INDENTATION + f"Enrolling Student {name}" + Style.RESET_ALL)
+
+        elif choice == "l":
+            print(Fore.GREEN + FIRST_INDENTATION + "Student Sign In" + Style.RESET_ALL)
+            email = ""
+
+            while True:
+                email = input(FIRST_INDENTATION + "Email: ")
+                password = input(FIRST_INDENTATION + "Password: ")
+
+                if not controller.validate_credentials(email, password):
+                    print(Fore.RED + FIRST_INDENTATION + "Incorrect email or password format." + Style.RESET_ALL)
+                    continue
+                break
+
+            print(Fore.YELLOW + FIRST_INDENTATION + "email and password formats acceptable" + Style.RESET_ALL)
+            student = controller.login(email, password)
+            if student:
+                subject_menu(student, controller)
+            else:
+                print(Fore.RED + FIRST_INDENTATION + "Student does not exist" + Style.RESET_ALL)
+        elif choice == "x":
+            break
+
+def subject_menu(student, controller):
+    subject_ctrl = SubjectController()
+    while True:
+        print(Fore.CYAN + SEC_INDENTATION + "Student Course Menu (c/e/r/s/x): " + Style.RESET_ALL, end="")
+        choice = input().strip().lower()
+        if choice == "c":
+            print(Fore.YELLOW + SEC_INDENTATION + "Updating Password" + Style.RESET_ALL)
+            new_pw = input(SEC_INDENTATION + "New Password: ")
+            confirm_pw = input(SEC_INDENTATION + "Confirm Password: ")
+            result = controller.change_password(student, new_pw, confirm_pw)
+            if result == "mismatch":
+                print(Fore.RED + SEC_INDENTATION + "Password does not match – try again" + Style.RESET_ALL)
+
+        elif choice == "e":
+            if len(student.subjects) < 4:
+                subj = subject_ctrl.enrol_subject(student)
+                print(Fore.YELLOW + SEC_INDENTATION + f"Enrolling in Subject-{subj.id}" + Style.RESET_ALL)
+                print(Fore.YELLOW + SEC_INDENTATION + f"You are now enrolled in {len(student.subjects)} out of 4 subjects" + Style.RESET_ALL)
+            else:
+                print(Fore.RED + SEC_INDENTATION + "Students are allowed to enrol in 4 subjects only" + Style.RESET_ALL)
+
+        elif choice == "r":
+            sid = int(input(SEC_INDENTATION + "Remove Subject by ID: "))
+            success = subject_ctrl.remove_subject(student, sid)
+            if success:
+                print(Fore.YELLOW + SEC_INDENTATION + f"Dropping Subject-{str(sid).zfill(3)}" + Style.RESET_ALL)
+                print(Fore.YELLOW + SEC_INDENTATION + f"You are now enrolled in {len(student.subjects)} out of 4 subjects" + Style.RESET_ALL)
+            else:
+                print(Fore.RED + SEC_INDENTATION + f"Subject-{str(sid).zfill(3)} not found in your enrolled subjects." + Style.RESET_ALL)
+                    
+        elif choice == "s":
+            if not student.subjects:
+                print(Fore.YELLOW + SEC_INDENTATION + "Showing 0 subjects" + Style.RESET_ALL)
+            else:
+                print(Fore.YELLOW + SEC_INDENTATION + f"Showing {len(student.subjects)} subjects" + Style.RESET_ALL)
+                for subj in student.subjects:
+                    print(SEC_INDENTATION + f"[ Subject::{subj.id.zfill(3)} -- mark = {subj.mark} -- grade = {subj.grade} ]")
+
+        elif choice == "x":
+            break

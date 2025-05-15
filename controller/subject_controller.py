@@ -1,49 +1,59 @@
-from model.student import Subject
+import random
+from model.subject import Subject
 from model.database import Database
 
 class SubjectController:
-    def __init__(self, students):
-        self.students = students  
+    def __init__(self):
+        self.students = Database.load_data()
 
     def enrol_subject(self, student):
-        students = Database.load_students()
-        for s in students:
-            if s.email == student.email:
-                if len(s.subject) >= 4:
-                    return f"\n\t\t\033[31mStudent {s.name} is already enrolled in 4 subjects.\033[0m"
-                new_subject = Subject()
-                s.subject.append(new_subject)
-                s.update_mark()
-                s.update_grade()
-                Database.save_students(students)
-                return f"\n\t\t\033[33mEnrolled in Subject ID {new_subject.id}. Total subjects: {len(s.subject)}\033[0m"
-        return "\n\t\t\033[31mStudent not found in database.\033[0m"
+        if len(student.subjects) >= 4:
+            return None
+
+        existing_ids = set()
+        for s in self.students:
+            for subj in s.subjects:
+                existing_ids.add(subj.id)
+
+        while True:
+            new_id = str(random.randint(1, 999)).zfill(3)
+            if new_id not in existing_ids:
+                break
+
+        new_subject = Subject(id=new_id)
+        student.enrol_subject(new_subject)
+
+        for i, s in enumerate(self.students):
+            if s.id == student.id:
+                self.students[i] = student
+                break
+
+        Database.save_data(self.students)
+        return new_subject
+
 
 
     def remove_subject(self, student, subject_id):
-        students = Database.load_students()
-        for s in students:
-            if s.email == student.email:
-                found = next((sub for sub in s.subject if sub.id == subject_id), None)
-                if not found:
-                    return f"\n\t\t\033[31mSubject ID {subject_id} not found for student {s.name}.\033[0m"
-                s.subject.remove(found)
-                s.update_mark()
-                s.update_grade()
-                Database.save_students(students)
-                return f"\n\t\t\033[32mSubject ID {subject_id} removed. Remaining subjects: {len(s.subject)}\033[0m"
-        return f"\n\t\t\033[31mStudent {student.email} not found in database.\033[0m"
+        subject_id = str(subject_id).zfill(3)  
 
-    def get_subjects(self, student):
-        students = Database.load_students()
-        if not student.subject:
-            return "\t\t < No subjects enrolled. >"
+        found = False
+        for subj in student.subjects:
+            if subj.id == subject_id:
+                found = True
+                break
 
-        result = ["\t\tSubject List:"]
-        for sub in student.subject:
-            # Align ID to 3 characters, mark to 3 width, grade to 3 width
-            result.append(f"\t\t[ Subject ID::{sub.id:>3} -- Mark: {sub.mark:>3} -- Grade: {sub.grade:<3} ]")
-        return "\n".join(result)
+        if found:
+            student.remove_subject(subject_id)
+            for i, s in enumerate(self.students):
+                if s.id == student.id:
+                    self.students[i] = student
+                    break
+            Database.save_data(self.students)
+            return True
+        else:
+            return False
 
-    def get_subject_count(self, student):
-        return len(student.subject)
+
+
+    def show_subjects(self, student):
+        return student.subjects

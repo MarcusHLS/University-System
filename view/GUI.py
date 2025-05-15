@@ -2,22 +2,18 @@ import tkinter as tk
 from tkinter import messagebox
 from controller.student_controller import StudentController
 from controller.subject_controller import SubjectController
-from model.database import Database
 import re
 
 class GUIUniApp:
     def __init__(self, master):
         self.master = master
-        
         self.master.title("University System")
         self.master.geometry("400x300")
-        
+
         self.student_controller = StudentController()
-        self.subject_controller = SubjectController(self.student_controller.students)
-        
-        self.students = Database.load_students()
+        self.subject_controller = SubjectController()
         self.logged_in_student = None
-        
+
         self.build_login_ui()
 
     def build_login_ui(self):
@@ -25,7 +21,7 @@ class GUIUniApp:
             widget.destroy()
 
         tk.Label(self.master, text="Student Login").pack(pady=10)
-        
+
         tk.Label(self.master, text="Email:").pack()
         self.email_entry = tk.Entry(self.master)
         self.email_entry.pack()
@@ -40,40 +36,44 @@ class GUIUniApp:
     def login(self):
         email = self.email_entry.get().strip()
         password = self.password_entry.get().strip()
-        
-        student, message = self.student_controller.login(email, password)
-        message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
-        messagebox.showinfo("Login", message)
-        
+
+        student = self.student_controller.login(email, password)
         if student:
             self.logged_in_student = student
+            messagebox.showinfo("Login", f"Welcome {student.name}")
             self.build_student_menu()
+        else:
+            messagebox.showerror("Login Failed", "Invalid email or password.")
 
     def register(self):
         reg_window = tk.Toplevel(self.master)
         reg_window.title("Register")
-        
+
         tk.Label(reg_window, text="Name:").pack()
         name_entry = tk.Entry(reg_window)
         name_entry.pack()
-        
+
         tk.Label(reg_window, text="Email:").pack()
         email_entry = tk.Entry(reg_window)
         email_entry.pack()
-        
+
         tk.Label(reg_window, text="Password:").pack()
         password_entry = tk.Entry(reg_window, show="*")
         password_entry.pack()
-        
+
         def do_register():
             name = name_entry.get().strip()
             email = email_entry.get().strip()
             password = password_entry.get().strip()
-            _, message = self.student_controller.register(name, email, password)
-            message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
-            messagebox.showinfo("Register", message)
-            self.students = Database.load_students()
-            reg_window.destroy()
+
+            result = self.student_controller.register(name, email, password)
+            if result == "registered":
+                messagebox.showinfo("Success", "Registration successful.")
+                reg_window.destroy()
+            elif result == "exists":
+                messagebox.showerror("Error", "Student already exists.")
+            elif result == "invalid_format":
+                messagebox.showerror("Error", "Invalid email or password format.")
 
         tk.Button(reg_window, text="Register", command=do_register).pack(pady=5)
 
@@ -85,70 +85,72 @@ class GUIUniApp:
 
         tk.Button(self.master, text="Enrol Subject", command=self.enrol_subject).pack(pady=5)
         tk.Button(self.master, text="Show Subjects", command=self.show_subjects).pack(pady=5)
-        tk.Button(self.master, text="Remove Subjects", command=self.remove_subjects).pack(pady=5)
+        tk.Button(self.master, text="Remove Subject", command=self.remove_subject).pack(pady=5)
         tk.Button(self.master, text="Change Password", command=self.change_password).pack(pady=5)
         tk.Button(self.master, text="Logout", command=self.logout).pack(pady=5)
 
     def enrol_subject(self):
-        message = self.subject_controller.enrol_subject(self.logged_in_student)
-        message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
-        messagebox.showinfo("Enrol Subject", message)
+        subject = self.subject_controller.enrol_subject(self.logged_in_student)
+        if subject:
+            messagebox.showinfo("Enrolled", f"Enrolled subject {subject.id} | Mark: {subject.mark} | Grade: {subject.grade}")
+        else:
+            messagebox.showwarning("Limit Reached", "You can enrol in up to 4 subjects.")
 
     def show_subjects(self):
-        message = self.subject_controller.get_subjects(self.logged_in_student)
-        message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
-        messagebox.showinfo("Subjects", message)
+        subjects = self.subject_controller.show_subjects(self.logged_in_student)
+        if not subjects:
+            messagebox.showinfo("Subjects", "No enrolled subjects.")
+            return
+        info = "\n".join([f"ID: {s.id} | Mark: {s.mark} | Grade: {s.grade}" for s in subjects])
+        messagebox.showinfo("Subjects", info)
 
-    def remove_subjects(self):
-        rev_window = tk.Toplevel(self.master)
-        rev_window.title("Register")
-        
-        tk.Label(rev_window, text="Enter Subject's ID:").pack()
-        id_entry = tk.Entry(rev_window)
-        id_entry.pack()
-        
+    def remove_subject(self):
+        remove_window = tk.Toplevel(self.master)
+        remove_window.title("Remove Subject")
+
+        tk.Label(remove_window, text="Enter Subject ID to remove:").pack()
+        subject_id_entry = tk.Entry(remove_window)
+        subject_id_entry.pack()
+
         def do_remove():
-            id = id_entry.get().strip()
-            
-            message = self.subject_controller.remove_subject(self.logged_in_student, id)
-            message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
-            messagebox.showinfo("Remove Subject by ID", message)
-            self.sync_logged_in_student()
-            rev_window.destroy()
+            subject_id = subject_id_entry.get().strip()
+            success = self.subject_controller.remove_subject(self.logged_in_student, subject_id)
+            if success:
+                messagebox.showinfo("Removed", f"Subject {subject_id} removed.")
+            else:
+                messagebox.showerror("Error", "Subject not found.")
+            remove_window.destroy()
 
-        tk.Button(rev_window, text="Remove", command=do_remove).pack(pady=5)
+        tk.Button(remove_window, text="Remove", command=do_remove).pack(pady=5)
 
     def change_password(self):
-        change_password_window = tk.Toplevel(self.master)
-        change_password_window.title("Change Password")
-        
-        tk.Label(change_password_window, text="Enter new password:").pack()
-        new_password_entry = tk.Entry(change_password_window)
-        new_password_entry.pack()
+        pw_window = tk.Toplevel(self.master)
+        pw_window.title("Change Password")
 
-        tk.Label(change_password_window, text="Enter confirm password:").pack()
-        confirm_password_entry = tk.Entry(change_password_window)
-        confirm_password_entry.pack()
-        
+        tk.Label(pw_window, text="New Password:").pack()
+        new_pw_entry = tk.Entry(pw_window, show="*")
+        new_pw_entry.pack()
+
+        tk.Label(pw_window, text="Confirm Password:").pack()
+        confirm_pw_entry = tk.Entry(pw_window, show="*")
+        confirm_pw_entry.pack()
+
         def do_change():
-            new_password = new_password_entry.get().strip()
-            confirm_password = confirm_password_entry.get().strip()
-            message = self.student_controller.change_password(self.logged_in_student, new_password, confirm_password)
-            message = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', message).strip()
-            messagebox.showinfo("Change Account Password", message)
-            self.sync_logged_in_student()
-            change_password_window.destroy()
+            new_pw = new_pw_entry.get().strip()
+            confirm_pw = confirm_pw_entry.get().strip()
+            result = self.student_controller.change_password(self.logged_in_student, new_pw, confirm_pw)
 
-        tk.Button(change_password_window, text="Change Password", command=do_change).pack(pady=5)
+            if result == "changed":
+                messagebox.showinfo("Success", "Password updated.")
+            elif result == "mismatch":
+                messagebox.showerror("Error", "Passwords do not match.")
+            elif result == "invalid_format":
+                messagebox.showerror("Error", "Invalid password format.")
+
+            pw_window.destroy()
+
+        tk.Button(pw_window, text="Change", command=do_change).pack(pady=5)
 
     def logout(self):
-        self.student_controller.save_students()
         self.logged_in_student = None
         self.build_login_ui()
-
-    def sync_logged_in_student(self):
-        self.students = Database.load_students()
-        for student in self.students:
-            if student.email == self.logged_in_student.email:
-                self.logged_in_student = student
-                break
