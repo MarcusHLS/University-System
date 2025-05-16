@@ -36,13 +36,27 @@ class GUIUniApp:
         email = self.email_entry.get().strip()
         password = self.password_entry.get().strip()
 
-        student = self.student_controller.login(email, password)
-        if student:
-            self.logged_in_student = student
-            messagebox.showinfo("Login", f"Welcome {student.name}")
-            self.build_student_menu()
+        if not email or not password:
+            messagebox.showerror("Login Failed", "Email and password cannot be empty.")
+            return
+        
+        if not re.fullmatch(r"[a-zA-Z]+\.[a-zA-Z]+@university\.com", email):
+            messagebox.showerror("Login Failed", "Email format must be firstname.lastname@university.com")
+            return
+        
+        result = self.student_controller.login(email, password)
+
+        if isinstance(result, str):
+            if result == "wrong_password":
+                messagebox.showerror("Login Failed", "Incorrect password.")
+            elif result == "no_account":
+                messagebox.showerror("Login Failed", "Account does not exist.")
+        elif result is None:
+            messagebox.showerror("Login Failed", "Unknown error: no student returned.")
         else:
-            messagebox.showerror("Login Failed", "Invalid email or password.")
+            self.logged_in_student = result
+            messagebox.showinfo("Login", f"Welcome {result.name}")
+            self.build_student_menu()
 
     def build_student_menu(self):
         for widget in self.master.winfo_children():
