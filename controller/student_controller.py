@@ -20,9 +20,12 @@ class StudentController:
 
     def login(self, email, password):
         for s in self.students:
-            if s.email == email and s.password == password:
-                return s
-        return None
+            if s.email == email:
+                if s.password == password:
+                    return s
+                else:
+                    return "wrong_password" 
+        return "no_account"
 
     def change_password(self, student, new_password, confirm_password):
         if new_password != confirm_password:
